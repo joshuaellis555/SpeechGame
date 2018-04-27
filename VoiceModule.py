@@ -1,6 +1,6 @@
 import speech_recognition as sr
 import keyboard
-import Snake
+
 
 #obtan audio from microphone
 r = sr.Recognizer()
@@ -19,16 +19,12 @@ while True:
                 words = r.recognize_sphinx(audio)
                 if "left" in words:
                     print("left")
-                    Snake.setDirection("left")
                 elif "right" in words:
                     print("right")
-                    Snake.setDirection("right")
                 elif "jump" in words:
                     print("jump")
-                    Snake.setDirection("up")
                 elif "down" in words:
                     print("down")
-                    Snake.setDirection("left")
                 else:
                     print("done")
                     pass
@@ -52,4 +48,3 @@ while True:
             except sr.RequestError as e:
                 print("Sphinx error; {0}".format(e))
 
-Snake.new_game()
