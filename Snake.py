@@ -1,13 +1,21 @@
 import threading
 import random
 import os.path
+import speech_recognition as sr
+import keyboard
 from tkinter import *
 
-WIDTH = 500
+WIDTH =  500
 HEIGHT = 500
 
-class Snake(Frame):
 
+class Snake(Frame):
+    r = sr.Recognizer()
+    print("Calibrating...")
+    with sr.Microphone() as source:
+        r.adjust_for_ambient_noise(source,duration=5)
+        print("Done Calibrating")
+        
     def __init__(self):
         Frame.__init__(self)
         #Set up the main window frame as a grid
@@ -41,7 +49,6 @@ class Snake(Frame):
         #self.direction_label.grid(row = 1, column = 2)
 
         self.new_game()
-
     def new_game(self):
         self.canvas.delete(ALL)
         self.canvas.create_text(WIDTH/2,HEIGHT/2-50,text="Welcome to Snake!"\
@@ -113,6 +120,30 @@ class Snake(Frame):
                 self.direction = "down"
             elif event.keycode == 37:
                 self.direction = "left"
+            elif keyboard.is_pressed('l'):
+                with sr.Microphone() as source:
+                    print("listing")
+                    audio = self.r.listen(source, phrase_time_limit = 1)
+                #recognize speech using Sphinx
+                try:       
+                    words = self.r.recognize_sphinx(audio)
+                    if "left" in words:
+                        print("left")
+                        self.direction = "left"
+                    elif "right" in words:
+                        print("right")
+                        self.direction = "right"
+                    elif "jump" in words:
+                        print("jump")
+                        self.direction = "up"
+                    elif "down" in words:
+                        print("down")
+                        self.direction = "left"
+                except sr.UnknownValueError:
+                    print("Could not understand you")
+                except sr.RequestError as e:
+                    print("Sphinx error; {0}".format(e))
+                    
             elif event.x < WIDTH/2 and HEIGHT/3 < event.y < HEIGHT-HEIGHT/3:
                 self.direction = "left"
                 #(Debug)
@@ -292,7 +323,32 @@ class Snake(Frame):
 
         #(Debug)
         #self.direction_label["text"] = "ENDED"
-    def setDirection(self,newDirection):
+    def setDirection(self):
+        while True:
+            if keyboard.is_pressed('l'):
+                with sr.Microphone() as source:
+                    print("listing")
+                    audio = r.listen(source, phrase_time_limit = 1)
+                #recognize speech using Sphinx
+                try:       
+                    words = r.recognize_sphinx(audio)
+                    if "left" in words:
+                        print("left")
+                        newDirection = "left"
+                    elif "right" in words:
+                        print("right")
+                        newDirection = "right"
+                    elif "jump" in words:
+                        print("jump")
+                        newDirection = "up"
+                    elif "down" in words:
+                        print("down")
+                        newDirection = "left"
+                except sr.UnknownValueError:
+                    print("Could not understand you")
+                except sr.RequestError as e:
+                    print("Sphinx error; {0}".format(e))
+                
         self.direction = newDirection
 
 Snake().mainloop()

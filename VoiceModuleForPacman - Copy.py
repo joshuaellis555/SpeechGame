@@ -1,5 +1,6 @@
 import speech_recognition as sr
-import keyboard
+#import keyboard
+#import Pacman
 
 
 #obtan audio from microphone
@@ -17,14 +18,15 @@ while True:
             #recognize speech using Sphinx
             try:       
                 words = r.recognize_sphinx(audio)
+                print(words)
                 if "left" in words:
-                    print("left")
+                    PLAYER.setDirection(LEFT)
                 elif "right" in words:
-                    print("right")
+                    PLAYER.setDirection(RIGHT)
                 elif "jump" in words:
-                    print("jump")
+                    PLAYER.setDirection(UP)
                 elif "down" in words:
-                    print("down")
+                    PLAYER.setDirection(DOWN)
                 else:
                     print("done")
                     pass

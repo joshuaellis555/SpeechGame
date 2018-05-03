@@ -1,8 +1,9 @@
-import threading
+import threading as Th
 import random
 import os.path
 from tkinter import *
 import time
+import VoiceModuleForPacman
 
 WIDTH = 28
 HEIGHT = 31
@@ -31,6 +32,9 @@ global PLAYER
 
 global POWER
 POWER=0
+
+global RUNNING
+RUNNING=False
 
 def rectangle(x,y,color,outline):#Generates a tkinter rectangle on the canvas
     return CANVAS.create_rectangle(
@@ -92,6 +96,7 @@ class Pacman(Tile):#The player
         Tile.__init__(self,x, y,'#ff0',PACMAN)
         
         self.direction=LEFT
+        self.nextDirection=self.direction
         
         self.consumed=Blank(x,y)
         self.consumed.remove()
@@ -117,6 +122,8 @@ class Pacman(Tile):#The player
     def move(self,direction=None):
         if self.direction==DEAD:
             return
+        if self.direction!=self.nextDirection:
+            self.setDirection(self.nextDirection)
         direction = direction if direction else self.direction
         x=(self.x+direction[0])%WIDTH
         y=(self.y+direction[1])%HEIGHT
@@ -135,12 +142,17 @@ class Pacman(Tile):#The player
             BOARD[ox][oy]=poo
 
     def setDirection(self,newDirection):
+        global RUNNING
+        RUNNING=True
         if self.direction==DEAD:
             return
         x=(self.x+newDirection[0])%WIDTH
         y=(self.y+newDirection[1])%HEIGHT
         if not BOARD[x][y].blocks:
             self.direction = newDirection
+            self.nextDirection=self.direction
+        else:
+            self.nextDirection=newDirection
 
     def kill(self):
         print(self.tileType,"is dead!!!")
@@ -155,6 +167,7 @@ class Ghost(Pacman):
         Tile.__init__(self,x, y,'#f0f',GHOST,blocks=True)
         
         self.direction=LEFT
+        self.nextDirection=self.direction
         
         self.consumed=Blank(x,y)
         self.consumed.remove()
@@ -175,7 +188,10 @@ class Ghost(Pacman):
         else:
             self.direction=(-1*self.direction[0],-1*self.direction[1])
             return None
-
+    def move(self):
+        self.nextDirection=self.direction
+        super().move()
+        
     def setDirection(self):
         if self.direction==DEAD:
             return
@@ -204,6 +220,14 @@ class Ghost(Pacman):
 class Game(Frame):
 
     def __init__(self):
+        print("in")
+        try:
+            VoiceModuleForPacman.calibrateSpeach()
+        except:
+
+            pass
+        print("out")
+        
         Frame.__init__(self)
         #Set up the main window frame as a grid
         self.master.title("Pacman")
@@ -226,6 +250,7 @@ class Game(Frame):
         self.new_game()
 
     def new_game(self):
+        print("new")
         self.canvas.delete(ALL)
 
         self.enemies=[]
@@ -260,17 +285,30 @@ class Game(Frame):
         self.play()
         
     def play(self):#Main play loop
+        print("play")
         global POWER
+        global RUNNING
         interval=.4
         start=time.time()
-        playing=True
-        while playing:
-            
+        while True:
+            print("voice")
+            try:
+                VoiceModuleForPacman.updateSpeach()
+            except:
+                pass
+
+            print("update")
             if start+interval>time.time():
                 self.update()
                 continue
 
+            print("running")
             start=time.time()
+
+            if not RUNNING:
+                continue
+
+            print("game")
             if POWER<0 or not POWER%2:
                 for enemy in self.enemies:
                     enemy.setDirection()
@@ -296,4 +334,4 @@ class Game(Frame):
         elif event.keycode == 37:
             self.player.setDirection(LEFT)
 
-Game().mainloop()
+Game().mainLoop()
