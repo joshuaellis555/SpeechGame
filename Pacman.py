@@ -1,9 +1,10 @@
-import threading as Th
+import threading
 import random
 import os.path
 from tkinter import *
 import time
-import VoiceModuleForPacman
+import speech_recognition as sr
+
 
 WIDTH = 28
 HEIGHT = 31
@@ -216,17 +217,49 @@ class Ghost(Pacman):
             self.replace(color='#f0f',outline='#000')
         self.vulnerable=vulnerable
 
+#########################  Voice  ###############################
+class Voice():
+    def __init__(self):
+        with sr.Microphone() as source:
+            self.recognizer = sr.Recognizer()
+            print("Calibrating...")
+            self.recognizer.adjust_for_ambient_noise(source,duration=5)
+            print("Done Calibrating")
+
+    def updateSpeach(self):
+        with sr.Microphone() as source:
+            audio = self.recognizer.listen(source, phrase_time_limit = 4)
+            #recognize speech using Sphinx
+            try:
+                words = self.recognizer.recognize_sphinx(audio)
+                wordArray = words.split()
+                print("words--->",words)
+                global PLAYER
+                for word in wordArray:
+                    if word == "up":
+                        print("up")
+                        PLAYER.setDirection(UP)
+                    elif word == "down":
+                        print("down")
+                        PLAYER.setDirection(DOWN)
+                    elif word == "left":
+                        print("left")
+                        PLAYER.setDirection(LEFT)
+                    elif word == "right":
+                        print("right")
+                        PLAYER.setDirection(RIGHT)
+                return()
+                
+            except:
+                print('error')
+        return()
+
 #########################  Game  ###############################
 class Game(Frame):
 
     def __init__(self):
-        print("in")
-        try:
-            VoiceModuleForPacman.calibrateSpeach()
-        except:
 
-            pass
-        print("out")
+        self.voice=Voice()
         
         Frame.__init__(self)
         #Set up the main window frame as a grid
@@ -250,7 +283,6 @@ class Game(Frame):
         self.new_game()
 
     def new_game(self):
-        print("new")
         self.canvas.delete(ALL)
 
         self.enemies=[]
@@ -291,24 +323,17 @@ class Game(Frame):
         interval=.4
         start=time.time()
         while True:
-            print("voice")
-            try:
-                VoiceModuleForPacman.updateSpeach()
-            except:
-                pass
-
-            print("update")
             if start+interval>time.time():
                 self.update()
                 continue
-
-            print("running")
+            
+            threading.Thread(target=self.voice.updateSpeach).start()
+            
             start=time.time()
 
             if not RUNNING:
                 continue
 
-            print("game")
             if POWER<0 or not POWER%2:
                 for enemy in self.enemies:
                     enemy.setDirection()
