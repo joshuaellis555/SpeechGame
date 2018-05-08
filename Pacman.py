@@ -30,6 +30,7 @@ BOARD=[[None for y in range(HEIGHT)] for x in range(WIDTH)]
 global CANVAS
 
 global PLAYER
+PLAYER=0
 
 global POWER
 POWER=0
@@ -226,33 +227,32 @@ class Voice():
             self.recognizer.adjust_for_ambient_noise(source,duration=5)
             print("Done Calibrating")
 
-    def updateSpeach(self):
-        with sr.Microphone() as source:
-            audio = self.recognizer.listen(source, phrase_time_limit = 4)
-            #recognize speech using Sphinx
-            try:
-                words = self.recognizer.recognize_sphinx(audio)
-                wordArray = words.split()
-                print("words--->",words)
-                global PLAYER
-                for word in wordArray:
-                    if word == "up":
-                        print("up")
-                        PLAYER.setDirection(UP)
-                    elif word == "down":
-                        print("down")
-                        PLAYER.setDirection(DOWN)
-                    elif word == "left":
-                        print("left")
-                        PLAYER.setDirection(LEFT)
-                    elif word == "right":
-                        print("right")
-                        PLAYER.setDirection(RIGHT)
-                return()
-                
-            except:
-                print('error')
-        return()
+    def updateSpeech(self):
+        while True:
+            with sr.Microphone() as source:
+                audio = self.recognizer.listen(source, phrase_time_limit = 2)
+                #recognize speech using Sphinx
+                try:
+                    words = self.recognizer.recognize_sphinx(audio)
+                    wordArray = words.split()
+                    print("words--->",words)
+                    global PLAYER
+                    for word in wordArray:
+                        if word == "two" or word == "no":
+                            print("up")
+                            PLAYER.setDirection(UP)
+                        elif word == "four" or word == "full":
+                            print("down")
+                            PLAYER.setDirection(DOWN)
+                        elif word == "one" or word == "want":
+                            print("left")
+                            PLAYER.setDirection(LEFT)
+                        elif word == "right":
+                            print("right")
+                            PLAYER.setDirection(RIGHT)
+                    
+                except:
+                    print('error')
 
 #########################  Game  ###############################
 class Game(Frame):
@@ -300,6 +300,7 @@ class Game(Frame):
                 if char=='P':
                     BOARD[x][y]=Pp(x,y)
                 if char=='C':
+                    global PLAYER
                     PLAYER=Pacman(x,y)
                     BOARD[x][y]=PLAYER
                 if char=='X':
@@ -322,12 +323,13 @@ class Game(Frame):
         global RUNNING
         interval=.4
         start=time.time()
+        threading.Thread(target=self.voice.updateSpeech).start()
         while True:
             if start+interval>time.time():
                 self.update()
                 continue
             
-            threading.Thread(target=self.voice.updateSpeach).start()
+            
             
             start=time.time()
 
@@ -350,13 +352,14 @@ class Game(Frame):
             self.update()
 
     def input(self,event):
+        global PLAYER
         if event.keycode == 38:
-            self.player.setDirection(UP)
+            PLAYER.setDirection(UP)
         elif event.keycode == 39:
-            self.player.setDirection(RIGHT)
+            PLAYER.setDirection(RIGHT)
         elif event.keycode == 40:
-            self.player.setDirection(DOWN)
+            PLAYER.setDirection(DOWN)
         elif event.keycode == 37:
-            self.player.setDirection(LEFT)
+            PLAYER.setDirection(LEFT)
 
 Game().mainLoop()
